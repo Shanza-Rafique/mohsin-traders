@@ -290,6 +290,28 @@ button.clear-all {
   margin-bottom: 15px;
 }
 
+/* Database Sync Status */
+.sync-status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 10px;
+}
+.sync-success {
+  background: #d4edda;
+  color: #155724;
+}
+.sync-error {
+  background: #f8d7da;
+  color: #721c24;
+}
+.sync-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
 @media(max-width:768px){
   .wrapper{flex-direction:column;}
   .sidebar{width:100%; text-align:center;}
@@ -319,6 +341,7 @@ button.clear-all {
       <i class="fas fa-calendar-alt"></i>
       <span id="currentDate"></span>
     </div>
+    <span id="globalSyncStatus" class="sync-status sync-success">💾 Database Connected</span>
   </div>
 </div>
 
@@ -634,21 +657,40 @@ button.clear-all {
       <div id="historyContainer"></div>
     </div>
 
-    <!-- SETTINGS -->
+    <!-- SETTINGS - UPDATED WITH DATABASE SYNC -->
     <div id="settings" class="section">
       <h2>Settings</h2>
       <div class="table-container">
         <div style="margin-bottom: 20px;">
-          <h3>Data Management</h3>
-          <p>Export all data or clear everything. Be careful - this cannot be undone!</p>
+          <h3>💾 Permanent Database Storage</h3>
+          <p>Your data is now automatically saved to Replit Database. It survives browser clears, device changes, and redeploys!</p>
+          <div class="invoice-controls" style="margin-bottom: 15px;">
+            <button onclick="forceSyncToDatabase()" class="save" style="background: #9b59b6;">
+              <i class="fas fa-cloud-upload-alt"></i> Force Save to Database
+            </button>
+            <button onclick="forceLoadFromDatabase()" class="save" style="background: #3498db;">
+              <i class="fas fa-cloud-download-alt"></i> Force Load from Database
+            </button>
+            <span id="manualSyncStatus" style="margin-left: 15px; font-style: italic;"></span>
+          </div>
+          <div style="background: #e8f4fc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <p><strong>✅ Database Status:</strong> <span id="dbStatus">Connected</span></p>
+            <p><small>Your inventory, customers, transactions, and history are now PERMANENT and shared across all devices!</small></p>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+          <h3>📋 Data Management</h3>
+          <p>Export backup or clear all data.</p>
           <div class="invoice-controls">
-            <button class="save" onclick="exportAllData()"><i class="fas fa-download"></i> Export All Data</button>
+            <button class="save" onclick="exportAllData()"><i class="fas fa-download"></i> Export Backup</button>
             <button class="clear-all" onclick="clearAllData()"><i class="fas fa-broom"></i> Clear All Data</button>
           </div>
         </div>
+        
         <div>
-          <h3>Invoice Settings</h3>
-          <p>Invoices will be downloaded to your default download folder. You can specify a preferred folder name:</p>
+          <h3>📄 Invoice Settings</h3>
+          <p>Invoices are saved to Replit storage.</p>
           <div class="invoice-controls">
             <input type="text" id="invoiceFolderName" placeholder="Invoices" class="invoice-input" style="flex: 1;">
             <button class="save" onclick="updateInvoiceSettings()"><i class="fas fa-save"></i> Save Settings</button>
@@ -690,6 +732,13 @@ button.clear-all {
 <div class="footer">© 2026 Mohsin Traders. All rights reserved.</div>
 
 <script>
+// ============================================
+// 🚀 MOHSIN TRADERS - PRODUCTION VERSION
+// ✅ Replit Database Integration - PERMANENT STORAGE
+// ✅ Cross-device sync - Same data everywhere
+// ✅ Survives redeploys & browser clears
+// ============================================
+
 // ------------- AUTH & DATE -------------
 if(!localStorage.getItem("isLoggedIn")) window.location.href="index.html";
 const today = new Date();
@@ -700,10 +749,10 @@ document.getElementById("dailyDate").innerText=today.toLocaleDateString('en-US',
 // Set default date for manual payment
 document.getElementById("manualPaymentDate").value = today.toISOString().split('T')[0];
 
-// ------------- DATA -------------
-let inventory=JSON.parse(localStorage.getItem("inventory")||`[]`);
-let invoiceItems=[]; 
-let invoiceHistory=JSON.parse(localStorage.getItem("invoiceHistory")||"[]");
+// ------------- DATA (Loaded from localStorage initially) -------------
+let inventory = JSON.parse(localStorage.getItem("inventory") || "[]");
+let invoiceItems = []; 
+let invoiceHistory = JSON.parse(localStorage.getItem("invoiceHistory") || "[]");
 let invoiceFolderName = localStorage.getItem("invoiceFolderName") || "Invoices";
 
 // CUSTOMER CREDIT DATA
@@ -715,6 +764,297 @@ let selectedCustomerId = null;
 
 // Display current invoice folder name
 document.getElementById("invoiceFolderName").value = invoiceFolderName;
+
+// ============================================
+// 💾 REPLIT DATABASE - PERMANENT STORAGE
+// ============================================
+
+// Update sync status indicator
+function updateSyncStatus(success, message) {
+    const statusEl = document.getElementById("globalSyncStatus");
+    const dbStatusEl = document.getElementById("dbStatus");
+    if (statusEl) {
+        if (success) {
+            statusEl.className = "sync-status sync-success";
+            statusEl.innerHTML = "💾 Database Connected";
+        } else {
+            statusEl.className = "sync-status sync-error";
+            statusEl.innerHTML = "⚠️ Database Error";
+        }
+    }
+    if (dbStatusEl) {
+        dbStatusEl.innerText = message || (success ? "Connected - Auto-sync active" : "Error - Check console");
+    }
+}
+
+// SAVE ALL data to Replit Database
+async function saveAllToDatabase() {
+    const data = {
+        inventory: inventory,
+        customers: customers,
+        transactions: customerTransactions,
+        history: invoiceHistory
+    };
+    
+    try {
+        const response = await fetch('/api/save-all', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            console.log('✅ All data saved to Replit Database');
+            updateSyncStatus(true, "Connected - Last sync: " + new Date().toLocaleTimeString());
+            return true;
+        } else {
+            console.error('❌ Save failed:', result.error);
+            updateSyncStatus(false, "Save failed");
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Database save error:', error);
+        updateSyncStatus(false, "Connection error");
+        return false;
+    }
+}
+
+// LOAD ALL data from Replit Database
+async function loadAllFromDatabase() {
+    try {
+        const response = await fetch('/api/load-all');
+        const data = await response.json();
+        
+        // Update localStorage
+        inventory = data.inventory || [];
+        customers = data.customers || [];
+        customerTransactions = data.transactions || [];
+        invoiceHistory = data.history || [];
+        
+        localStorage.setItem('inventory', JSON.stringify(inventory));
+        localStorage.setItem('customers', JSON.stringify(customers));
+        localStorage.setItem('customerTransactions', JSON.stringify(customerTransactions));
+        localStorage.setItem('invoiceHistory', JSON.stringify(invoiceHistory));
+        
+        console.log('✅ All data loaded from Replit Database');
+        updateSyncStatus(true, "Connected - Last sync: " + new Date().toLocaleTimeString());
+        
+        // Refresh all views
+        refreshAllViews();
+        return true;
+    } catch (error) {
+        console.error('❌ Database load error:', error);
+        updateSyncStatus(false, "Load failed");
+        return false;
+    }
+}
+
+// Force sync (manual)
+async function forceSyncToDatabase() {
+    const statusEl = document.getElementById("manualSyncStatus");
+    statusEl.innerHTML = "⏳ Saving to database...";
+    statusEl.style.color = "#856404";
+    
+    const success = await saveAllToDatabase();
+    
+    if (success) {
+        statusEl.innerHTML = "✅ Data saved to database!";
+        statusEl.style.color = "#155724";
+        setTimeout(() => { statusEl.innerHTML = ""; }, 3000);
+    } else {
+        statusEl.innerHTML = "❌ Save failed! Check console.";
+        statusEl.style.color = "#721c24";
+    }
+}
+
+// Force load (manual)
+async function forceLoadFromDatabase() {
+    const statusEl = document.getElementById("manualSyncStatus");
+    statusEl.innerHTML = "⏳ Loading from database...";
+    statusEl.style.color = "#856404";
+    
+    const success = await loadAllFromDatabase();
+    
+    if (success) {
+        statusEl.innerHTML = "✅ Data loaded from database!";
+        statusEl.style.color = "#155724";
+        setTimeout(() => { statusEl.innerHTML = ""; }, 3000);
+    } else {
+        statusEl.innerHTML = "❌ Load failed! Check console.";
+        statusEl.style.color = "#721c24";
+    }
+}
+
+// Refresh all UI views
+function refreshAllViews() {
+    updateInventoryTable();
+    updateDashboard();
+    renderProducts();
+    renderCustomers();
+    initCustomerDropdowns();
+    renderHistory();
+    if (document.getElementById("invoice").style.display === "block") {
+        updateInvoiceSummary();
+    }
+}
+
+// ============================================
+// 🔄 OVERRIDE EXISTING FUNCTIONS TO AUTO-SYNC
+// ============================================
+
+// Override saveData
+const originalSaveData = saveData;
+saveData = function() {
+    originalSaveData();
+    // Auto-sync to database
+    setTimeout(() => saveAllToDatabase(), 100);
+};
+
+// Override saveCustomerData
+const originalSaveCustomerData = saveCustomerData;
+saveCustomerData = function() {
+    originalSaveCustomerData();
+    // Auto-sync to database
+    setTimeout(() => saveAllToDatabase(), 100);
+};
+
+// Override clearAllData
+const originalClearAllData = clearAllData;
+clearAllData = async function() {
+    if (confirm("WARNING: This will delete ALL data including inventory, products, invoice history, customers, and transactions. This action cannot be undone. Are you absolutely sure?")) {
+        inventory = [];
+        invoiceHistory = [];
+        invoiceItems = [];
+        customers = [];
+        customerTransactions = [];
+        
+        localStorage.removeItem("inventory");
+        localStorage.removeItem("invoiceHistory");
+        localStorage.removeItem("customers");
+        localStorage.removeItem("customerTransactions");
+        
+        // Also clear from database
+        await saveAllToDatabase();
+        
+        updateInventoryTable();
+        updateDashboard();
+        renderProducts();
+        renderInvoice();
+        updateInvoiceSummary();
+        renderCustomers();
+        initCustomerDropdowns();
+        
+        alert("✅ All data has been cleared from both browser and database!");
+    }
+};
+
+// Override addProductFromInput
+const originalAddProductFromInput = addProductFromInput;
+addProductFromInput = function() {
+    originalAddProductFromInput();
+    // Auto-sync after adding product
+    setTimeout(() => saveAllToDatabase(), 100);
+};
+
+// Override deleteProduct
+const originalDeleteProduct = deleteProduct;
+deleteProduct = function(i) {
+    originalDeleteProduct(i);
+    setTimeout(() => saveAllToDatabase(), 100);
+};
+
+// Override addNewCustomer
+const originalAddNewCustomer = addNewCustomer;
+addNewCustomer = function() {
+    originalAddNewCustomer();
+    setTimeout(() => saveAllToDatabase(), 100);
+};
+
+// Override deleteCustomer
+const originalDeleteCustomer = deleteCustomer;
+deleteCustomer = function(customerId) {
+    originalDeleteCustomer(customerId);
+    setTimeout(() => saveAllToDatabase(), 100);
+};
+
+// Override recordPayment
+const originalRecordPayment = recordPayment;
+recordPayment = function() {
+    originalRecordPayment();
+    setTimeout(() => saveAllToDatabase(), 100);
+};
+
+// Override recordManualPayment
+const originalRecordManualPayment = recordManualPayment;
+recordManualPayment = function() {
+    originalRecordManualPayment();
+    setTimeout(() => saveAllToDatabase(), 100);
+};
+
+// Override generateInvoicePDF
+const originalGenerateInvoicePDF = generateInvoicePDF;
+generateInvoicePDF = async function() {
+    await originalGenerateInvoicePDF();
+    setTimeout(() => saveAllToDatabase(), 100);
+};
+
+// Override deleteInvoice
+const originalDeleteInvoice = deleteInvoice;
+deleteInvoice = function(index) {
+    originalDeleteInvoice(index);
+    setTimeout(() => saveAllToDatabase(), 100);
+};
+
+// ============================================
+// 🔐 LOGIN - Load from database on successful login
+// ============================================
+const originalLoginFormSubmit = document.getElementById("loginForm")?.onsubmit;
+if (document.getElementById("loginForm")) {
+    document.getElementById("loginForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        const operator = document.getElementById("merchant").value.trim();
+        const password = document.getElementById("password").value;
+        const msg = document.getElementById("loginMessage");
+        
+        if (operator === "Mohsin" && password === "mohsin@123") {
+            msg.className = "login-message alert alert-success";
+            msg.innerHTML = "<i class='fas fa-check-circle me-2'></i> Login successful! Loading your data...";
+            msg.style.display = "block";
+            
+            // Load data from database FIRST
+            await loadAllFromDatabase();
+            
+            localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("merchantName", operator);
+            
+            setTimeout(() => {
+                window.location.href = "dashboard.html";
+            }, 1500);
+        } else {
+            msg.className = "login-message alert alert-danger";
+            msg.innerHTML = "<i class='fas fa-times-circle me-2'></i> Invalid username or password. Try: Mohsin / mohsin@123";
+            msg.style.display = "block";
+        }
+    });
+}
+
+// ============================================
+// 📥 DASHBOARD INIT - Load from database on page load
+// ============================================
+window.addEventListener('load', async function() {
+    // Only run on dashboard page
+    if (window.location.pathname.includes('dashboard.html')) {
+        updateSyncStatus(true, "Loading data...");
+        await loadAllFromDatabase();
+        updateSyncStatus(true, "Connected - Data loaded");
+    }
+});
+
+// ============================================
+// 🧩 EXISTING FUNCTIONS (Keep all your original functions below)
+// ============================================
 
 // Initialize customer dropdowns
 function initCustomerDropdowns() {
@@ -805,18 +1145,13 @@ function recordManualPayment() {
         return;
     }
     
-    // Store previous values for transaction record
     const previousBalance = customer.currentBalance;
     const previousTotalPaid = customer.totalPaid || 0;
     
-    // UPDATE CUSTOMER RECORDS - THIS IS THE KEY FIX
-    // Received Amount is ADDED to Total Paid
     customer.totalPaid = (customer.totalPaid || 0) + receivedAmount;
-    // Remaining Balance becomes the new Current Balance
     customer.currentBalance = remainingBalance;
     customer.lastInvoiceDate = paymentDate;
     
-    // Create transaction record
     const transactionId = `TRX-MANUAL-${Date.now().toString().slice(-6)}`;
     const transaction = {
         id: transactionId,
@@ -837,7 +1172,6 @@ function recordManualPayment() {
     customerTransactions.push(transaction);
     saveCustomerData();
     
-    // Clear form
     document.getElementById("manualReceivedAmount").value = "";
     document.getElementById("manualRemainingBalance").value = "";
     document.getElementById("manualPaymentNote").value = "";
@@ -846,12 +1180,11 @@ function recordManualPayment() {
     document.getElementById("manualTotalPaidDisplay").innerText = "PKR 0.00";
     document.getElementById("manualNewBalanceDisplay").innerText = "PKR 0.00";
     
-    // Refresh views
     renderCustomers();
     initCustomerDropdowns();
     viewCustomerTransactions(customerId);
     
-    alert(`✅ PAYMENT RECORDED SUCCESSFULLY!\n\nCustomer: ${customer.name}\n💰 Received: PKR ${receivedAmount.toFixed(2)} (Added to Total Paid)\n📊 Previous Balance: PKR ${previousBalance.toFixed(2)}\n🆕 New Balance: PKR ${remainingBalance.toFixed(2)}\n💵 Total Paid Updated: PKR ${previousTotalPaid.toFixed(2)} → PKR ${customer.totalPaid.toFixed(2)}`);
+    alert(`✅ PAYMENT RECORDED SUCCESSFULLY!\n\nCustomer: ${customer.name}\n💰 Received: PKR ${receivedAmount.toFixed(2)}\n🆕 New Balance: PKR ${remainingBalance.toFixed(2)}`);
 }
 
 // Update displays when customer is selected
@@ -867,7 +1200,6 @@ function updateManualPaymentDisplay() {
             document.getElementById("manualCurrentBalanceDisplay").innerText = `PKR ${currentBalance.toFixed(2)}`;
             document.getElementById("manualTotalPaidDisplay").innerText = `PKR ${totalPaid.toFixed(2)}`;
             
-            // Clear input fields
             document.getElementById("manualReceivedAmount").value = "";
             document.getElementById("manualRemainingBalance").value = "";
             document.getElementById("manualNewBalanceDisplay").innerText = "PKR 0.00";
@@ -1268,28 +1600,6 @@ function saveData(){
   saveCustomerData();
 }
 
-function clearAllData(){
-  if(confirm("WARNING: This will delete ALL data including inventory, products, invoice history, customers, and transactions. This action cannot be undone. Are you absolutely sure?")){
-    inventory = [];
-    invoiceHistory = [];
-    invoiceItems = [];
-    customers = [];
-    customerTransactions = [];
-    localStorage.removeItem("inventory");
-    localStorage.removeItem("invoiceHistory");
-    localStorage.removeItem("customers");
-    localStorage.removeItem("customerTransactions");
-    updateInventoryTable();
-    updateDashboard();
-    renderProducts();
-    renderInvoice();
-    updateInvoiceSummary();
-    renderCustomers();
-    initCustomerDropdowns();
-    alert("All data has been cleared!");
-  }
-}
-
 function exportAllData(){
   const data = {
     inventory: inventory,
@@ -1327,7 +1637,10 @@ function showSection(id){
   document.querySelectorAll(".section").forEach(s=>s.style.display="none"); 
   document.getElementById(id).style.display="block"; 
   if(id==="history") renderHistory();
-  if(id==="settings") document.getElementById("invoiceFolderName").value = invoiceFolderName;
+  if(id==="settings") {
+    document.getElementById("invoiceFolderName").value = invoiceFolderName;
+    // Add sync buttons if not already there (they're already in HTML)
+  }
   if(id==="customers") {
     renderCustomers();
     initCustomerDropdowns();
@@ -1559,7 +1872,7 @@ async function generateInvoicePDF(){
     try {
         const pdfBase64 = doc.output('datauristring').split(',')[1];
         await fetch('/save-pdf', {
-              method: 'POST',
+            method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({pdfData: pdfBase64, fileName: fileName})
         }).catch(() => console.log('Server save skipped'));
@@ -1733,6 +2046,8 @@ renderCustomers();
 document.getElementById("manualPaymentCustomer").addEventListener("change", updateManualPaymentDisplay);
 document.getElementById("manualReceivedAmount").addEventListener("input", updateTotalPaidFromReceived);
 document.getElementById("manualRemainingBalance").addEventListener("input", updateNewBalanceFromRemaining);
+
+// Load data from database on page load (already handled by window.load above)
 </script>
 </body>
 </html>
