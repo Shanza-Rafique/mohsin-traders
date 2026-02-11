@@ -701,12 +701,7 @@ document.getElementById("dailyDate").innerText=today.toLocaleDateString('en-US',
 document.getElementById("manualPaymentDate").value = today.toISOString().split('T')[0];
 
 // ------------- DATA -------------
-let inventory=JSON.parse(localStorage.getItem("inventory")||`[
-  {"name":"Laptop","stock":15,"sold":0,"actualPrice":120,"salePrice":null,"unit":"Pieces"},
-  {"name":"Mouse","stock":4,"sold":0,"actualPrice":30,"salePrice":null,"unit":"Pieces"},
-  {"name":"Keyboard","stock":0,"sold":0,"actualPrice":50,"salePrice":null,"unit":"Pieces"},
-  {"name":"Monitor","stock":9,"sold":0,"actualPrice":200,"salePrice":null,"unit":"Pieces"}
-]`);
+let inventory=JSON.parse(localStorage.getItem("inventory")||`[]`);
 let invoiceItems=[]; 
 let invoiceHistory=JSON.parse(localStorage.getItem("invoiceHistory")||"[]");
 let invoiceFolderName = localStorage.getItem("invoiceFolderName") || "Invoices";
