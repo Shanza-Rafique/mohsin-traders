@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mohsin Traders | Dashboard</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root {
+  --primary: #2c3e50;
+  --secondary: #3498db;
+  --accent: #1abc9c;
+  --light: #ecf0f1;
+  --dark: #2c3e50;
+  --success: #27ae60;
+  --warning: #f39c12;
+  --danger: #e74c3c;
+}
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+body {min-height:100vh; display:flex; flex-direction:column; background:#e8f4fc;}
+
+/* ========== HEADER WITH LOGO ========== */
+.top-header { 
+  background: linear-gradient(90deg, var(--primary), var(--secondary)); 
+  color: #fff; 
+  padding: 15px 35px; 
+  display:flex; 
+  justify-content:space-between; 
+  align-items: center;
+  flex-wrap:wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-logo {
+  height: 50px;
+  width: auto;
+  border-radius: 10px;
+  border: 3px solid rgba(255,255,255,0.3);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.brand h1 { 
+  font-size:1.8rem; 
+  font-weight:800; 
+  color: white;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.header-info { 
+  font-size:0.9rem; 
+  margin-top:5px; 
+  flex-basis:100%;
+  color: rgba(255,255,255,0.9);
+}
+
+.operator { 
+  background: rgba(255,255,255,0.15); 
+  padding: 8px 15px; 
+  border-radius: 10px; 
+  font-weight: 600; 
+  display:flex; 
+  align-items:center; 
+  gap:10px;
+}
+
+.operator input#currentDate {
+  border:none; 
+  background:transparent; 
+  color:#fff; 
+  font-weight:600; 
+  cursor:pointer; 
+  font-size:0.9rem;
+}
+
+.operator input#currentDate:focus {
+  outline:none;
+}
+
+.wrapper { display:flex; flex:1; }
+.sidebar { width:260px; background:#278cae; color:white; padding:20px; }
+.sidebar ul { list-style:none; }
+.sidebar li { padding:12px 15px; margin-bottom:10px; border-radius:10px; cursor:pointer; display:flex; align-items:center; gap:12px; transition:.3s; }
+.sidebar li:hover { background: rgba(255,255,255,0.15); }
+.main { flex:1; padding:20px; overflow-x:auto; }
+.cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:20px; margin-bottom:20px; }
+.card { background:white; border-radius:12px; padding:20px; box-shadow:0 5px 15px rgba(0,0,0,0.08); display:flex; justify-content:space-between; align-items:center; }
+.card i { font-size:2rem; color: var(--secondary);}
+.card h3 { font-size:1.4rem; color:var(--primary);}
+.card p { font-size:0.9rem; color:#666; margin-top:5px;}
+.card.profit { border-left: 5px solid var(--success); }
+.card.profit i { color: var(--success); }
+.card.total-profit { border-left: 5px solid var(--accent); }
+.card.total-profit i { color: var(--accent); }
+.card .item-list { 
+  font-size: 0.8rem; 
+  color: #666; 
+  margin-top: 5px; 
+  max-height: 60px; 
+  overflow-y: auto;
+  padding-right: 5px;
+}
+.card .item-list::-webkit-scrollbar {
+  width: 4px;
+}
+.card .item-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 2px;
+}
+.table-container { background:white; border-radius:12px; padding:20px; box-shadow:0 5px 15px rgba(0,0,0,0.08); margin-bottom:20px;}
+table { width:100%; border-collapse: collapse;}
+th, td { padding:10px; border-bottom:1px solid #e5e7eb;}
+th { background:#f8f9fa; text-align:left; }
+button { padding:6px 12px; border:none; border-radius:6px; cursor:pointer; transition: all 0.3s ease; }
+button:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
+button.edit { background:var(--accent); color:#fff; }
+button.delete { background:var(--danger); color:#fff; }
+button.save { background:var(--success); color:#fff; margin-right:10px;}
+button.pdf { background:var(--secondary); color:#fff;}
+button.add-item { 
+  background: linear-gradient(135deg, var(--accent), var(--secondary));
+  color: white;
+  padding: 12px 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+button.clear-all { 
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: white;
+  padding: 12px 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 10px;
+}
+.section { display:none;}
+#dashboard { display:block;}
+#dateDisplay { background: #4a90e2; color: #fff; padding: 8px 14px; border-radius: 12px; display: flex; align-items: center; font-weight: 600; gap: 8px; font-size: 0.95rem; cursor: pointer;}
+#invoiceForm { display:none; background:white; border-radius:15px; padding:25px; box-shadow:0 10px 30px rgba(0,0,0,0.3); position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1000; width:400px; max-width:90%;}
+#invoiceForm h3 { margin-bottom:20px; color:var(--primary); text-align:center; font-size:1.4rem;}
+#invoiceForm input, #invoiceForm select { margin:10px 0; padding:12px 15px; border-radius:8px; border:2px solid #e0e0e0; width:100%; font-size:1rem; transition: border-color 0.3s;}
+#invoiceForm input:focus, #invoiceForm select:focus { outline:none; border-color:var(--secondary);}
+#overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:900;}
+#searchCustomer { margin-bottom:10px; padding:10px 15px; width:250px; border-radius:8px; border:2px solid #e0e0e0;}
+.footer { text-align:center; padding:20px; min-height:60px; background:#fff; font-size:.9rem; color:#666; border-top:1px solid #eee;}
+
+/* Invoice Summary Styles */
+.invoice-summary {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  border: 2px solid #e0e0e0;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed #ddd;
+}
+.summary-row.total {
+  font-weight: bold;
+  font-size: 1.1em;
+  border-bottom: 2px solid #333;
+  padding-bottom: 12px;
+  margin-bottom: 15px;
+}
+.summary-row.balance {
+  color: var(--primary);
+  font-weight: bold;
+  font-size: 1.2em;
+  background: #e8f4ff;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+.summary-label {
+  color: #666;
+}
+.summary-value {
+  font-weight: 600;
+  color: #333;
+}
+
+/* Action buttons in tables */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.table-btn {
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.table-btn.delete {
+  background: var(--danger);
+  color: white;
+}
+.table-btn.edit {
+  background: var(--accent);
+  color: white;
+}
+
+/* Invoice Controls */
+.invoice-controls {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.invoice-input {
+  padding: 12px 15px;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+  font-size: 1rem;
+  min-width: 200px;
+}
+.invoice-input:focus {
+  outline: none;
+  border-color: var(--secondary);
+}
+
+/* Customer Transactions */
+.transaction-card {
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  border-left: 4px solid var(--success);
+}
+.transaction-card.debit {
+  border-left-color: var(--danger);
+}
+.transaction-card.credit {
+  border-left-color: var(--warning);
+}
+
+/* Customer Balance Badge */
+.balance-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.balance-positive {
+  background: #d4edda;
+  color: #155724;
+}
+.balance-negative {
+  background: #f8d7da;
+  color: #721c24;
+}
+.balance-zero {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+/* Manual Payment Entry Section */
+.manual-payment-section {
+  background: #fff3cd;
+  border: 2px solid #ffeeba;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.manual-payment-title {
+  color: #856404;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+@media(max-width:768px){
+  .wrapper{flex-direction:column;}
+  .sidebar{width:100%; text-align:center;}
+  .top-header{flex-direction:column; gap:10px; text-align:center;}
+  .brand {justify-content: center;}
+  .summary-row {flex-direction: column;}
+  .summary-value {margin-top: 5px;}
+  .invoice-controls {flex-direction: column; align-items: stretch;}
+  .invoice-input {width: 100%;}
+}
+</style>
+</head>
+<body>
+
+<!-- ========== HEADER WITH LOGO ========== -->
+<div class="top-header">
+  <div>
+    <div class="brand">
+      <!-- LOGO -->
+      <img src="mt.png" alt="Mohsin Traders Logo" class="header-logo">
+      <h1>Mohsin Traders</h1>
+    </div>
+    <div class="header-info">Labarkot Road College Doraha Mansehra | Contact: 03018146756 / 03115536075</div>
+  </div>
+  <div class="operator">
+    <div id="dateDisplay">
+      <i class="fas fa-calendar-alt"></i>
+      <span id="currentDate"></span>
+    </div>
+  </div>
+</div>
+
+<div class="wrapper">
+  <div class="sidebar">
+    <ul>
+      <li onclick="showSection('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</li>
+      <li onclick="showSection('products')"><i class="fas fa-boxes"></i> Product Catalog</li>
+      <li onclick="showSection('inventory')"><i class="fas fa-file-alt"></i> Inventory</li>
+      <li onclick="showSection('invoice')"><i class="fas fa-file-invoice"></i> Invoice</li>
+      <li onclick="showSection('customers')"><i class="fas fa-users"></i> Customer Credit</li>
+      <li onclick="showSection('history')"><i class="fas fa-clock"></i> History</li>
+      <li onclick="showSection('settings')"><i class="fas fa-cog"></i> Settings</li>
+      <li onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="section">
+      <div class="cards">
+        <div class="card">
+          <div>
+            <p>Total Products</p>
+            <h3 id="totalProducts">0</h3>
+          </div>
+          <i class="fas fa-box"></i>
+        </div>
+        <div class="card">
+          <div>
+            <p>Low Stock Items (≤5)</p>
+            <h3 id="lowStock">0</h3>
+            <div class="item-list" id="lowStockItems"></div>
+          </div>
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="card">
+          <div>
+            <p>Out of Stock Items</p>
+            <h3 id="outStock">0</h3>
+            <div class="item-list" id="outStockItems"></div>
+          </div>
+          <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="card profit">
+          <div>
+            <p>Today's Profit</p>
+            <h3 id="dailyProfit">PKR 0.00</h3>
+            <p id="dailyDate" style="font-size:0.8rem; color:#888;"></p>
+          </div>
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="card total-profit">
+          <div>
+            <p>Total Profit</p>
+            <h3 id="totalProfit">PKR 0.00</h3>
+            <p style="font-size:0.8rem; color:#888;">All Time</p>
+          </div>
+          <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="card" style="border-left: 5px solid var(--secondary);">
+          <div>
+            <p>Total Customers</p>
+            <h3 id="totalCustomers">0</h3>
+          </div>
+          <i class="fas fa-users"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCT CATALOG -->
+    <div id="products" class="section">
+      <h2>Product Catalog</h2>
+      <div style="margin-bottom:10px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+        <input type="text" id="productName" placeholder="Product Name" class="invoice-input" style="flex: 2;">
+        <input type="number" id="productQty" placeholder="Quantity" class="invoice-input" style="flex: 1;">
+        <select id="productUnit" class="invoice-input" style="flex: 1;">
+          <option value="Pieces">Pieces</option>
+          <option value="Cartons">Cartons</option>
+          <option value="Boxes">Boxes</option>
+          <option value="Packets">Packets</option>
+          <option value="Bundles">Bundles</option>
+          <option value="Kg">Kg</option>
+          <option value="Liters">Liters</option>
+        </select>
+        <input type="number" id="productPrice" placeholder="Actual Price/Unit" class="invoice-input" style="flex: 1;">
+        <button onclick="addProductFromInput()" class="add-item" style="flex: 1;"><i class="fas fa-plus"></i> Add Product</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Serial</th><th>Name</th><th>Quantity</th><th>Unit</th><th>Price/Unit</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productTable"></tbody>
+        </table>
+      </div>
+      <div class="invoice-controls">
+        <button class="save" onclick="saveData()"><i class="fas fa-save"></i> Save Data</button>
+        <button class="clear-all" onclick="clearAllData()"><i class="fas fa-trash-alt"></i> Clear All Data</button>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div id="inventory" class="section">
+      <h2>Inventory Overview</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Serial</th><th>Product</th><th>Unit</th><th>Stock in Hand</th><th>Sold Quantity</th><th>Actual Price/Unit</th><th>Profit/Unit</th><th>Total Profit</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- INVOICE -->
+    <div id="invoice" class="section">
+      <h2>Generate Invoice</h2>
+      <button onclick="showInvoiceForm()" class="add-item"><i class="fas fa-plus-circle"></i> Add Item to Invoice</button>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Serial</th><th>Name</th><th>Quantity</th><th>Unit</th><th>Sale Price/Unit</th><th>Total Price</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="invoiceTable"></tbody>
+        </table>
+      </div>
+      
+      <!-- Invoice Summary -->
+      <div class="invoice-summary">
+        <h3>Invoice Summary</h3>
+        <div class="summary-row">
+          <span class="summary-label">Total Items:</span>
+          <span class="summary-value" id="summaryTotalItems">0</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Total Quantity:</span>
+          <span class="summary-value" id="summaryTotalQty">0</span>
+        </div>
+        <div class="summary-row total">
+          <span class="summary-label">Current Invoice:</span>
+          <span class="summary-value" id="summaryTotalAmount">PKR 0.00</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Previous Balance:</span>
+          <span class="summary-value" id="summaryPreviousBalance">PKR 0.00</span>
+        </div>
+        <div class="summary-row total" style="background: #e8f4ff;">
+          <span class="summary-label">Total With Previous:</span>
+          <span class="summary-value" id="summaryTotalWithPrevious">PKR 0.00</span>
+        </div>
+      </div>
+      
+      <div class="invoice-controls">
+        <select id="customerSelect" class="invoice-input" onchange="loadCustomerBalance()" style="flex: 2;">
+          <option value="">Select Customer or Add New</option>
+          <option value="new">+ Add New Customer</option>
+        </select>
+        <div id="newCustomerFields" style="display: none; flex: 2; gap: 10px; flex-wrap: wrap;">
+          <input type="text" id="invoiceCustomerName" placeholder="Customer Name" class="invoice-input" style="flex: 2;">
+          <input type="text" id="invoiceCustomerPhone" placeholder="Phone Number" class="invoice-input" style="flex: 1;">
+          <input type="text" id="invoiceCustomerAddress" placeholder="Address" class="invoice-input" style="flex: 2;">
+        </div>
+        <button class="pdf" onclick="generateInvoicePDF()"><i class="fas fa-file-pdf"></i> Generate PDF</button>
+        <button class="delete" onclick="clearInvoice()"><i class="fas fa-trash"></i> Clear Invoice</button>
+      </div>
+    </div>
+
+    <!-- CUSTOMER CREDIT MANAGEMENT -->
+    <div id="customers" class="section">
+      <h2>Customer Credit Management</h2>
+      
+      <!-- Add New Customer -->
+      <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+        <input type="text" id="newCustomerName" placeholder="Customer Name" class="invoice-input" style="flex: 2;">
+        <input type="text" id="newCustomerPhone" placeholder="Phone Number" class="invoice-input" style="flex: 1;">
+        <input type="text" id="newCustomerAddress" placeholder="Address" class="invoice-input" style="flex: 2;">
+        <input type="number" id="newCustomerBalance" placeholder="Initial Balance" class="invoice-input" style="flex: 1;">
+        <button onclick="addNewCustomer()" class="add-item" style="flex: 1;">
+          <i class="fas fa-user-plus"></i> Add Customer
+        </button>
+      </div>
+      
+      <!-- Customer Search -->
+      <div style="margin-bottom: 20px;">
+        <input type="text" id="searchCustomerCredit" placeholder="Search Customer by Name or Phone" 
+               class="invoice-input" style="width: 300px;" oninput="renderCustomers()">
+      </div>
+      
+      <!-- Customers Table -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Customer Name</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>Current Balance</th>
+              <th>Total Paid</th>
+              <th>Last Invoice</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="customersTable"></tbody>
+        </table>
+      </div>
+      
+      <!-- MANUAL PAYMENT ENTRY SECTION - END OF DAY PAYMENT RECORDING -->
+      <div class="manual-payment-section">
+        <h3 class="manual-payment-title">
+          <i class="fas fa-pen-alt"></i> End of Day Payment Entry
+        </h3>
+        <p style="color: #856404; margin-bottom: 15px;">
+          Enter payments collected manually on paper invoices. 
+          <strong style="color: #28a745;">Received Amount</strong> will be added to customer's Total Paid. 
+          <strong style="color: #ffc107;">Remaining Balance</strong> will become the new Current Balance.
+        </p>
+        
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+          <div style="flex: 2;">
+            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #856404;">Select Customer</label>
+            <select id="manualPaymentCustomer" class="invoice-input" style="width: 100%;">
+              <option value="">Select Customer</option>
+            </select>
+          </div>
+          
+          <div style="flex: 1;">
+            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #856404;">
+              <i class="fas fa-arrow-up" style="color: #28a745;"></i> Received Amount (PKR)
+              <span style="font-size: 0.75rem; display: block; color: #28a745;">(Added to Total Paid)</span>
+            </label>
+            <input type="number" id="manualReceivedAmount" placeholder="Enter received amount" class="invoice-input" style="width: 100%; border: 2px solid #28a745;">
+          </div>
+          
+          <div style="flex: 1;">
+            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #856404;">
+              <i class="fas fa-balance-scale" style="color: #ffc107;"></i> Remaining Balance (PKR)
+              <span style="font-size: 0.75rem; display: block; color: #ffc107;">(New Current Balance)</span>
+            </label>
+            <input type="number" id="manualRemainingBalance" placeholder="Enter new balance" class="invoice-input" style="width: 100%; border: 2px solid #ffc107;">
+          </div>
+          
+          <div style="flex: 1;">
+            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #856404;">Payment Date</label>
+            <input type="date" id="manualPaymentDate" class="invoice-input" style="width: 100%;">
+          </div>
+          
+          <div style="flex: 2;">
+            <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #856404;">Notes (Invoice # or details)</label>
+            <input type="text" id="manualPaymentNote" placeholder="e.g., Payment against INV-12345" class="invoice-input" style="width: 100%;">
+          </div>
+          
+          <div style="flex: 1;">
+            <button onclick="recordManualPayment()" class="save" style="width: 100%; padding: 12px; background: #28a745;">
+              <i class="fas fa-save"></i> Record Payment
+            </button>
+          </div>
+        </div>
+        
+        <div style="margin-top: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+          <div style="flex: 1; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #6c757d;">
+            <span style="font-weight: 600; display: block; margin-bottom: 5px;">Current Balance:</span>
+            <span id="manualCurrentBalanceDisplay" style="font-size: 1.2rem; font-weight: bold;">PKR 0.00</span>
+          </div>
+          <div style="flex: 1; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+            <span style="font-weight: 600; display: block; margin-bottom: 5px;">New Total Paid:</span>
+            <span id="manualTotalPaidDisplay" style="font-size: 1.2rem; font-weight: bold; color: #28a745;">PKR 0.00</span>
+          </div>
+          <div style="flex: 1; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+            <span style="font-weight: 600; display: block; margin-bottom: 5px;">New Balance:</span>
+            <span id="manualNewBalanceDisplay" style="font-size: 1.2rem; font-weight: bold; color: #ffc107;">PKR 0.00</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Regular Payment Section (for other payment types) -->
+      <div class="table-container" style="margin-top: 30px;">
+        <h3>Record Other Payment Types</h3>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;">
+          <select id="paymentCustomer" class="invoice-input" style="flex: 2;">
+            <option value="">Select Customer</option>
+          </select>
+          <input type="number" id="paymentAmount" placeholder="Payment Amount (PKR)" class="invoice-input" style="flex: 1;">
+          <select id="paymentType" class="invoice-input" style="flex: 1;">
+            <option value="cash">Cash</option>
+            <option value="bank">Bank Transfer</option>
+            <option value="check">Cheque</option>
+            <option value="adjustment">Adjustment</option>
+          </select>
+          <input type="text" id="paymentNote" placeholder="Payment Note" class="invoice-input" style="flex: 2;">
+          <button onclick="recordPayment()" class="save" style="flex: 1;">
+            <i class="fas fa-money-bill-wave"></i> Record Payment
+          </button>
+        </div>
+        
+        <!-- Customer Transactions History -->
+        <h3>Customer Transactions</h3>
+        <div id="customerTransactions"></div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="history" class="section">
+      <h2>Past Invoices</h2>
+      <input type="text" id="searchCustomerHistory" placeholder="Search by Customer Name" class="invoice-input" oninput="renderHistory()">
+      <div id="historyContainer"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settings" class="section">
+      <h2>Settings</h2>
+      <div class="table-container">
+        <div style="margin-bottom: 20px;">
+          <h3>Data Management</h3>
+          <p>Export all data or clear everything. Be careful - this cannot be undone!</p>
+          <div class="invoice-controls">
+            <button class="save" onclick="exportAllData()"><i class="fas fa-download"></i> Export All Data</button>
+            <button class="clear-all" onclick="clearAllData()"><i class="fas fa-broom"></i> Clear All Data</button>
+          </div>
+        </div>
+        <div>
+          <h3>Invoice Settings</h3>
+          <p>Invoices will be downloaded to your default download folder. You can specify a preferred folder name:</p>
+          <div class="invoice-controls">
+            <input type="text" id="invoiceFolderName" placeholder="Invoices" class="invoice-input" style="flex: 1;">
+            <button class="save" onclick="updateInvoiceSettings()"><i class="fas fa-save"></i> Save Settings</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="overlay"></div>
+<div id="invoiceForm">
+  <h3>Add Item to Invoice</h3>
+  <input type="text" id="itemName" placeholder="Product Name" style="width:100%; margin-bottom:15px; padding:12px; border-radius:8px; border:2px solid #e0e0e0;">
+  <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+    <input type="number" id="itemQty" placeholder="Quantity" style="flex: 1; padding:12px; border-radius:8px; border:2px solid #e0e0e0;">
+    <select id="itemUnit" style="flex: 1; padding:12px; border-radius:8px; border:2px solid #e0e0e0;">
+      <option value="Pieces">Pieces</option>
+      <option value="Cartons">Cartons</option>
+      <option value="Boxes">Boxes</option>
+      <option value="Packets">Packets</option>
+      <option value="Bundles">Bundles</option>
+      <option value="Kg">Kg</option>
+      <option value="Liters">Liters</option>
+    </select>
+  </div>
+  <input type="number" id="itemPrice" placeholder="Sale Price/Unit" style="width:100%; margin-bottom:20px; padding:12px; border-radius:8px; border:2px solid #e0e0e0;">
+  <div style="display:flex; gap:15px;">
+    <button onclick="submitInvoiceItem()" style="flex:1; padding:12px; background:var(--success); color:white; border-radius:8px; font-weight:600;">
+      <i class="fas fa-check"></i> Add Item
+    </button>
+    <button onclick="hideInvoiceForm()" style="flex:1; padding:12px; background:#666; color:white; border-radius:8px; font-weight:600;">
+      <i class="fas fa-times"></i> Cancel
+    </button>
+  </div>
+</div>
+
+<div class="footer">© 2026 Mohsin Traders. All rights reserved.</div>
+
+<script>
+// ------------- AUTH & DATE -------------
+if(!localStorage.getItem("isLoggedIn")) window.location.href="index.html";
+const today = new Date();
+const todayFormatted = today.toISOString().split('T')[0];
+document.getElementById("currentDate").innerText=today.toLocaleDateString('en-US',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+document.getElementById("dailyDate").innerText=today.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+// Set default date for manual payment
+document.getElementById("manualPaymentDate").value = today.toISOString().split('T')[0];
+
+// ------------- DATA -------------
+let inventory=JSON.parse(localStorage.getItem("inventory")||`[
+  {"name":"Laptop","stock":15,"sold":0,"actualPrice":120,"salePrice":null,"unit":"Pieces"},
+  {"name":"Mouse","stock":4,"sold":0,"actualPrice":30,"salePrice":null,"unit":"Pieces"},
+  {"name":"Keyboard","stock":0,"sold":0,"actualPrice":50,"salePrice":null,"unit":"Pieces"},
+  {"name":"Monitor","stock":9,"sold":0,"actualPrice":200,"salePrice":null,"unit":"Pieces"}
+]`);
+let invoiceItems=[]; 
+let invoiceHistory=JSON.parse(localStorage.getItem("invoiceHistory")||"[]");
+let invoiceFolderName = localStorage.getItem("invoiceFolderName") || "Invoices";
+
+// CUSTOMER CREDIT DATA
+let customers = JSON.parse(localStorage.getItem("customers") || "[]");
+let customerTransactions = JSON.parse(localStorage.getItem("customerTransactions") || "[]");
+
+// Current selected customer for invoice
+let selectedCustomerId = null;
+
+// Display current invoice folder name
+document.getElementById("invoiceFolderName").value = invoiceFolderName;
+
+// Initialize customer dropdowns
+function initCustomerDropdowns() {
+    const customerSelect = document.getElementById("customerSelect");
+    const paymentCustomer = document.getElementById("paymentCustomer");
+    const manualPaymentCustomer = document.getElementById("manualPaymentCustomer");
+    
+    while (customerSelect.options.length > 2) customerSelect.remove(2);
+    while (paymentCustomer.options.length > 1) paymentCustomer.remove(1);
+    while (manualPaymentCustomer.options.length > 1) manualPaymentCustomer.remove(1);
+    
+    customers.forEach(customer => {
+        const option1 = document.createElement("option");
+        option1.value = customer.id;
+        option1.textContent = `${customer.name} - ${customer.phone || 'No Phone'} (Balance: PKR ${customer.currentBalance.toFixed(2)})`;
+        customerSelect.appendChild(option1);
+        
+        const option2 = document.createElement("option");
+        option2.value = customer.id;
+        option2.textContent = `${customer.name} - ${customer.phone || 'No Phone'}`;
+        paymentCustomer.appendChild(option2);
+        
+        const option3 = document.createElement("option");
+        option3.value = customer.id;
+        option3.textContent = `${customer.name} - ${customer.phone || 'No Phone'} (Balance: PKR ${customer.currentBalance.toFixed(2)})`;
+        manualPaymentCustomer.appendChild(option3);
+    });
+}
+
+// -------------------- AUTO CREATE CUSTOMER FROM INVOICE --------------------
+function autoCreateCustomerFromInvoice(customerName, phone, address) {
+    let existingCustomer = customers.find(c => 
+        c.name.toLowerCase() === customerName.toLowerCase()
+    );
+    
+    if (existingCustomer) {
+        existingCustomer.lastInvoiceDate = new Date().toISOString();
+        if (phone && !existingCustomer.phone) existingCustomer.phone = phone;
+        if (address && !existingCustomer.address) existingCustomer.address = address;
+        saveCustomerData();
+        return existingCustomer;
+    } else {
+        const customerId = `CUST-${Date.now().toString().slice(-6)}`;
+        const newCustomer = {
+            id: customerId,
+            name: customerName,
+            phone: phone || "",
+            address: address || "",
+            initialBalance: 0,
+            currentBalance: 0,
+            totalPaid: 0,
+            createdAt: new Date().toISOString(),
+            lastInvoiceDate: new Date().toISOString()
+        };
+        
+        customers.push(newCustomer);
+        saveCustomerData();
+        return newCustomer;
+    }
+}
+
+// -------------------- MANUAL PAYMENT RECORDING (END OF DAY) --------------------
+function recordManualPayment() {
+    const customerId = document.getElementById("manualPaymentCustomer").value;
+    const receivedAmount = parseFloat(document.getElementById("manualReceivedAmount").value) || 0;
+    const remainingBalance = parseFloat(document.getElementById("manualRemainingBalance").value);
+    const paymentDate = document.getElementById("manualPaymentDate").value;
+    const note = document.getElementById("manualPaymentNote").value.trim();
+    
+    if (!customerId) {
+        alert("❌ Please select a customer!");
+        return;
+    }
+    
+    if (receivedAmount < 0) {
+        alert("❌ Received amount cannot be negative!");
+        return;
+    }
+    
+    if (remainingBalance === undefined || isNaN(remainingBalance) || remainingBalance < 0) {
+        alert("❌ Please enter a valid remaining balance!");
+        return;
+    }
+    
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) {
+        alert("❌ Customer not found!");
+        return;
+    }
+    
+    // Store previous values for transaction record
+    const previousBalance = customer.currentBalance;
+    const previousTotalPaid = customer.totalPaid || 0;
+    
+    // UPDATE CUSTOMER RECORDS - THIS IS THE KEY FIX
+    // Received Amount is ADDED to Total Paid
+    customer.totalPaid = (customer.totalPaid || 0) + receivedAmount;
+    // Remaining Balance becomes the new Current Balance
+    customer.currentBalance = remainingBalance;
+    customer.lastInvoiceDate = paymentDate;
+    
+    // Create transaction record
+    const transactionId = `TRX-MANUAL-${Date.now().toString().slice(-6)}`;
+    const transaction = {
+        id: transactionId,
+        customerId: customerId,
+        customerName: customer.name,
+        type: "payment",
+        amount: receivedAmount,
+        remainingBalance: remainingBalance,
+        paymentType: "cash",
+        note: note || `Manual payment - Received: PKR ${receivedAmount.toFixed(2)}, New Balance: PKR ${remainingBalance.toFixed(2)}`,
+        date: new Date(paymentDate).toISOString(),
+        previousBalance: previousBalance,
+        newBalance: remainingBalance,
+        previousTotalPaid: previousTotalPaid,
+        newTotalPaid: customer.totalPaid
+    };
+    
+    customerTransactions.push(transaction);
+    saveCustomerData();
+    
+    // Clear form
+    document.getElementById("manualReceivedAmount").value = "";
+    document.getElementById("manualRemainingBalance").value = "";
+    document.getElementById("manualPaymentNote").value = "";
+    document.getElementById("manualPaymentCustomer").value = "";
+    document.getElementById("manualCurrentBalanceDisplay").innerText = "PKR 0.00";
+    document.getElementById("manualTotalPaidDisplay").innerText = "PKR 0.00";
+    document.getElementById("manualNewBalanceDisplay").innerText = "PKR 0.00";
+    
+    // Refresh views
+    renderCustomers();
+    initCustomerDropdowns();
+    viewCustomerTransactions(customerId);
+    
+    alert(`✅ PAYMENT RECORDED SUCCESSFULLY!\n\nCustomer: ${customer.name}\n💰 Received: PKR ${receivedAmount.toFixed(2)} (Added to Total Paid)\n📊 Previous Balance: PKR ${previousBalance.toFixed(2)}\n🆕 New Balance: PKR ${remainingBalance.toFixed(2)}\n💵 Total Paid Updated: PKR ${previousTotalPaid.toFixed(2)} → PKR ${customer.totalPaid.toFixed(2)}`);
+}
+
+// Update displays when customer is selected
+function updateManualPaymentDisplay() {
+    const customerId = document.getElementById("manualPaymentCustomer").value;
+    
+    if (customerId) {
+        const customer = customers.find(c => c.id === customerId);
+        if (customer) {
+            const currentBalance = customer.currentBalance;
+            const totalPaid = customer.totalPaid || 0;
+            
+            document.getElementById("manualCurrentBalanceDisplay").innerText = `PKR ${currentBalance.toFixed(2)}`;
+            document.getElementById("manualTotalPaidDisplay").innerText = `PKR ${totalPaid.toFixed(2)}`;
+            
+            // Clear input fields
+            document.getElementById("manualReceivedAmount").value = "";
+            document.getElementById("manualRemainingBalance").value = "";
+            document.getElementById("manualNewBalanceDisplay").innerText = "PKR 0.00";
+        }
+    } else {
+        document.getElementById("manualCurrentBalanceDisplay").innerText = "PKR 0.00";
+        document.getElementById("manualTotalPaidDisplay").innerText = "PKR 0.00";
+        document.getElementById("manualNewBalanceDisplay").innerText = "PKR 0.00";
+        document.getElementById("manualReceivedAmount").value = "";
+        document.getElementById("manualRemainingBalance").value = "";
+    }
+}
+
+// Update New Balance display when Remaining Balance is entered
+function updateNewBalanceFromRemaining() {
+    const remainingBalance = parseFloat(document.getElementById("manualRemainingBalance").value) || 0;
+    document.getElementById("manualNewBalanceDisplay").innerText = `PKR ${remainingBalance.toFixed(2)}`;
+}
+
+// Update Total Paid display when Received Amount is entered
+function updateTotalPaidFromReceived() {
+    const customerId = document.getElementById("manualPaymentCustomer").value;
+    const receivedAmount = parseFloat(document.getElementById("manualReceivedAmount").value) || 0;
+    
+    if (customerId) {
+        const customer = customers.find(c => c.id === customerId);
+        if (customer) {
+            const currentTotalPaid = customer.totalPaid || 0;
+            const newTotalPaid = currentTotalPaid + receivedAmount;
+            document.getElementById("manualTotalPaidDisplay").innerText = `PKR ${newTotalPaid.toFixed(2)}`;
+        }
+    }
+}
+
+// -------------------- CUSTOMER CREDIT FUNCTIONS --------------------
+function addNewCustomer() {
+    const name = document.getElementById("newCustomerName").value.trim();
+    const phone = document.getElementById("newCustomerPhone").value.trim();
+    const address = document.getElementById("newCustomerAddress").value.trim();
+    const balance = parseFloat(document.getElementById("newCustomerBalance").value) || 0;
+    
+    if (!name) {
+        alert("Please enter customer name!");
+        return;
+    }
+    
+    const customerId = `CUST-${Date.now().toString().slice(-6)}`;
+    const newCustomer = {
+        id: customerId,
+        name: name,
+        phone: phone,
+        address: address,
+        initialBalance: balance,
+        currentBalance: balance,
+        totalPaid: 0,
+        createdAt: new Date().toISOString(),
+        lastInvoiceDate: null
+    };
+    
+    customers.push(newCustomer);
+    saveCustomerData();
+    
+    document.getElementById("newCustomerName").value = "";
+    document.getElementById("newCustomerPhone").value = "";
+    document.getElementById("newCustomerAddress").value = "";
+    document.getElementById("newCustomerBalance").value = "";
+    
+    initCustomerDropdowns();
+    renderCustomers();
+    
+    alert(`Customer ${name} added successfully!`);
+}
+
+function renderCustomers() {
+    const searchTerm = document.getElementById("searchCustomerCredit").value.toLowerCase();
+    const table = document.getElementById("customersTable");
+    table.innerHTML = "";
+    
+    const filteredCustomers = customers.filter(customer => 
+        customer.name.toLowerCase().includes(searchTerm) ||
+        (customer.phone && customer.phone.toLowerCase().includes(searchTerm))
+    );
+    
+    filteredCustomers.sort((a, b) => a.name.localeCompare(b.name));
+    
+    filteredCustomers.forEach((customer, index) => {
+        const balanceClass = customer.currentBalance > 0 ? "balance-negative" : 
+                           customer.currentBalance < 0 ? "balance-positive" : "balance-zero";
+        
+        table.innerHTML += `<tr>
+            <td>${index + 1}</td>
+            <td><strong>${customer.name}</strong></td>
+            <td>${customer.phone || "-"}</td>
+            <td>${customer.address || "-"}</td>
+            <td><span class="balance-badge ${balanceClass}">PKR ${customer.currentBalance.toFixed(2)}</span></td>
+            <td>PKR ${(customer.totalPaid || 0).toFixed(2)}</td>
+            <td>${customer.lastInvoiceDate ? new Date(customer.lastInvoiceDate).toLocaleDateString() : "-"}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="table-btn edit" onclick="viewCustomerTransactions('${customer.id}')" title="View Transactions">
+                        <i class="fas fa-history"></i> History
+                    </button>
+                    <button class="table-btn delete" onclick="deleteCustomer('${customer.id}')" title="Delete Customer">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+    });
+    
+    updateDashboard();
+}
+
+function recordPayment() {
+    const customerId = document.getElementById("paymentCustomer").value;
+    const amount = parseFloat(document.getElementById("paymentAmount").value);
+    const type = document.getElementById("paymentType").value;
+    const note = document.getElementById("paymentNote").value.trim();
+    
+    if (!customerId || !amount || amount <= 0) {
+        alert("Please select customer and enter valid amount!");
+        return;
+    }
+    
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) {
+        alert("Customer not found!");
+        return;
+    }
+    
+    const transactionId = `TRX-${Date.now().toString().slice(-6)}`;
+    const transaction = {
+        id: transactionId,
+        customerId: customerId,
+        customerName: customer.name,
+        type: "payment",
+        amount: amount,
+        paymentType: type,
+        note: note,
+        date: new Date().toISOString(),
+        previousBalance: customer.currentBalance,
+        newBalance: customer.currentBalance - amount
+    };
+    
+    customer.currentBalance -= amount;
+    customer.totalPaid = (customer.totalPaid || 0) + amount;
+    customer.lastInvoiceDate = new Date().toISOString();
+    
+    customerTransactions.push(transaction);
+    saveCustomerData();
+    
+    document.getElementById("paymentAmount").value = "";
+    document.getElementById("paymentNote").value = "";
+    
+    renderCustomers();
+    initCustomerDropdowns();
+    viewCustomerTransactions(customerId);
+    
+    alert(`Payment of PKR ${amount.toFixed(2)} recorded for ${customer.name}!`);
+}
+
+function viewCustomerTransactions(customerId) {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
+    
+    const transactions = customerTransactions.filter(t => t.customerId === customerId);
+    const container = document.getElementById("customerTransactions");
+    
+    if (transactions.length === 0) {
+        container.innerHTML = `<div style="text-align: center; padding: 20px; color: #666;">
+            <i class="fas fa-history" style="font-size: 48px; margin-bottom: 10px;"></i>
+            <p>No transactions found for ${customer.name}</p>
+        </div>`;
+        return;
+    }
+    
+    let html = `<h4>Transaction History for ${customer.name}</h4>`;
+    
+    transactions.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(transaction => {
+        const isPayment = transaction.type === "payment";
+        const isInvoice = transaction.type === "invoice";
+        
+        html += `<div class="transaction-card ${isPayment ? 'credit' : 'debit'}">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>${isPayment ? '💰 Payment Received' : isInvoice ? '📄 Invoice Generated' : '📝 Initial Balance'}</strong>
+                    <p style="margin: 5px 0; font-size: 0.9em; color: #666;">
+                        ${new Date(transaction.date).toLocaleString()}
+                        ${transaction.note ? `• ${transaction.note}` : ''}
+                    </p>
+                    ${transaction.remainingBalance !== undefined ? `<p style="margin: 2px 0; font-size: 0.85em; color: #666;">New Balance: PKR ${transaction.remainingBalance.toFixed(2)}</p>` : ''}
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin: 0; font-weight: bold; color: ${isPayment ? 'var(--success)' : 'var(--danger)'}">
+                        ${isPayment ? '+' : '-'} PKR ${transaction.amount.toFixed(2)}
+                    </p>
+                    <p style="margin: 5px 0; font-size: 0.85em; color: #666;">
+                        Balance: PKR ${transaction.newBalance.toFixed(2)}
+                    </p>
+                </div>
+            </div>
+        </div>`;
+    });
+    
+    container.innerHTML = html;
+}
+
+function deleteCustomer(customerId) {
+    if (!confirm("Are you sure you want to delete this customer? This will also delete all transactions!")) return;
+    
+    const index = customers.findIndex(c => c.id === customerId);
+    if (index > -1) {
+        customers.splice(index, 1);
+    }
+    
+    customerTransactions = customerTransactions.filter(t => t.customerId !== customerId);
+    
+    saveCustomerData();
+    renderCustomers();
+    initCustomerDropdowns();
+    alert("Customer deleted successfully!");
+}
+
+function saveCustomerData() {
+    localStorage.setItem("customers", JSON.stringify(customers));
+    localStorage.setItem("customerTransactions", JSON.stringify(customerTransactions));
+}
+
+function loadCustomerBalance() {
+    const customerSelect = document.getElementById("customerSelect");
+    const newCustomerFields = document.getElementById("newCustomerFields");
+    
+    if (customerSelect.value === "new") {
+        newCustomerFields.style.display = "flex";
+        selectedCustomerId = null;
+        document.getElementById("summaryPreviousBalance").textContent = "PKR 0.00";
+        updateInvoiceSummary();
+    } else if (customerSelect.value) {
+        newCustomerFields.style.display = "none";
+        selectedCustomerId = customerSelect.value;
+        
+        const customer = customers.find(c => c.id === selectedCustomerId);
+        if (customer) {
+            document.getElementById("summaryPreviousBalance").textContent = `PKR ${customer.currentBalance.toFixed(2)}`;
+            updateInvoiceSummary();
+        }
+    } else {
+        newCustomerFields.style.display = "none";
+        selectedCustomerId = null;
+        document.getElementById("summaryPreviousBalance").textContent = "PKR 0.00";
+        updateInvoiceSummary();
+    }
+}
+
+// -------------------- UTILS --------------------
+function updateInventoryTable(){
+  const table=document.getElementById("inventoryTable"); table.innerHTML="";
+  inventory.forEach((item,i)=>{
+    const profitUnit=item.sold>0 && item.salePrice!==null?item.salePrice-item.actualPrice:null;
+    const totalProfit=profitUnit!==null?profitUnit*item.sold:null;
+    table.innerHTML+=`<tr>
+      <td>${i+1}</td>
+      <td>${item.name}</td>
+      <td>${item.unit || "Pieces"}</td>
+      <td>${item.stock}</td>
+      <td>${item.sold}</td>
+      <td>PKR ${item.actualPrice}</td>
+      <td>${profitUnit!==null?'PKR '+profitUnit.toFixed(2):"-"}</td>
+      <td>${totalProfit!==null?'PKR '+totalProfit.toFixed(2):"-"}</td>
+      <td>
+        <div class="action-buttons">
+          <button class="table-btn delete" onclick="deleteInventoryItem(${i})" title="Delete Product">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  });
+}
+
+function deleteInventoryItem(index){
+  if(confirm("Are you sure you want to delete this product from inventory? This will also remove it from all historical data.")){
+    inventory.splice(index,1);
+    updateInventoryTable();
+    updateDashboard();
+    renderProducts();
+    saveData();
+  }
+}
+
+function updateDashboard(){
+  document.getElementById("totalProducts").innerText=inventory.length;
+  document.getElementById("totalCustomers").innerText = customers.length;
+  
+  const lowStockItems = inventory.filter(i => i.stock > 0 && i.stock <= 5);
+  document.getElementById("lowStock").innerText = lowStockItems.length;
+  
+  const lowStockList = document.getElementById("lowStockItems");
+  if (lowStockItems.length > 0) {
+    lowStockList.innerHTML = lowStockItems.map(item => 
+      `<div>${item.name} (${item.stock} ${item.unit || "Pieces"})</div>`
+    ).join('');
+  } else {
+    lowStockList.innerHTML = '<div>No low stock items</div>';
+  }
+  
+  const outStockItems = inventory.filter(i => i.stock <= 0);
+  document.getElementById("outStock").innerText = outStockItems.length;
+  
+  const outStockList = document.getElementById("outStockItems");
+  if (outStockItems.length > 0) {
+    outStockList.innerHTML = outStockItems.map(item => 
+      `<div>${item.name} (${item.unit || "Pieces"})</div>`
+    ).join('');
+  } else {
+    outStockList.innerHTML = '<div>All items in stock</div>';
+  }
+  
+  let totalProfit = 0;
+  inventory.forEach(item => {
+    if (item.sold > 0 && item.salePrice !== null) {
+      const profitPerUnit = item.salePrice - item.actualPrice;
+      totalProfit += profitPerUnit * item.sold;
+    }
+  });
+  
+  document.getElementById("totalProfit").innerText = `PKR ${totalProfit.toFixed(2)}`;
+  
+  let dailyProfit = 0;
+  const today = new Date().toISOString().split('T')[0];
+  
+  const todayInvoices = invoiceHistory.filter(inv => {
+    const invoiceDate = new Date(inv.date).toISOString().split('T')[0];
+    return invoiceDate === today;
+  });
+  
+  todayInvoices.forEach(invoice => {
+    invoice.items.forEach(item => {
+      const product = inventory.find(p => p.name === item.name);
+      if (product && product.actualPrice) {
+        const profitPerUnit = item.price - product.actualPrice;
+        dailyProfit += profitPerUnit * item.qty;
+      }
+    });
+  });
+  
+  document.getElementById("dailyProfit").innerText = `PKR ${dailyProfit.toFixed(2)}`;
+}
+
+function renderProducts(){
+  const tbody=document.getElementById("productTable"); tbody.innerHTML="";
+  inventory.forEach((item,i)=>{
+    tbody.innerHTML+=`<tr>
+      <td>${i+1}</td>
+      <td>${item.name}</td>
+      <td>${item.stock}</td>
+      <td>${item.unit || "Pieces"}</td>
+      <td>PKR ${item.actualPrice}</td>
+      <td>
+        <div class="action-buttons">
+          <button class="table-btn delete" onclick="deleteProduct(${i})" title="Delete Product">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  });
+}
+
+function addProductFromInput(){
+  const name=document.getElementById("productName").value;
+  const qty=parseInt(document.getElementById("productQty").value);
+  const unit=document.getElementById("productUnit").value;
+  const price=parseFloat(document.getElementById("productPrice").value);
+  if(!name || isNaN(qty) || isNaN(price)) return alert("Please fill all fields!");
+  inventory.push({name,stock:qty,sold:0,actualPrice:price,salePrice:null,unit});
+  renderProducts(); updateInventoryTable(); updateDashboard();
+  document.getElementById("productName").value=""; 
+  document.getElementById("productQty").value=""; 
+  document.getElementById("productPrice").value="";
+  document.getElementById("productUnit").value="Pieces";
+  saveData();
+}
+
+function deleteProduct(i){
+  if(confirm("Are you sure you want to delete this product?")){
+    inventory.splice(i,1); 
+    renderProducts(); 
+    updateInventoryTable(); 
+    updateDashboard();
+    saveData();
+  }
+}
+
+function saveData(){ 
+  localStorage.setItem("inventory",JSON.stringify(inventory));
+  localStorage.setItem("invoiceHistory",JSON.stringify(invoiceHistory));
+  saveCustomerData();
+}
+
+function clearAllData(){
+  if(confirm("WARNING: This will delete ALL data including inventory, products, invoice history, customers, and transactions. This action cannot be undone. Are you absolutely sure?")){
+    inventory = [];
+    invoiceHistory = [];
+    invoiceItems = [];
+    customers = [];
+    customerTransactions = [];
+    localStorage.removeItem("inventory");
+    localStorage.removeItem("invoiceHistory");
+    localStorage.removeItem("customers");
+    localStorage.removeItem("customerTransactions");
+    updateInventoryTable();
+    updateDashboard();
+    renderProducts();
+    renderInvoice();
+    updateInvoiceSummary();
+    renderCustomers();
+    initCustomerDropdowns();
+    alert("All data has been cleared!");
+  }
+}
+
+function exportAllData(){
+  const data = {
+    inventory: inventory,
+    invoiceHistory: invoiceHistory,
+    customers: customers,
+    customerTransactions: customerTransactions,
+    exportDate: new Date().toISOString()
+  };
+  
+  const dataStr = JSON.stringify(data, null, 2);
+  const dataBlob = new Blob([dataStr], {type: 'application/json'});
+  const url = URL.createObjectURL(dataBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mohsin-traders-backup-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  alert("Data exported successfully!");
+}
+
+function updateInvoiceSettings(){
+  const folderName = document.getElementById("invoiceFolderName").value.trim();
+  if(folderName){
+    invoiceFolderName = folderName;
+    localStorage.setItem("invoiceFolderName", invoiceFolderName);
+    alert("Invoice settings updated! PDFs will be saved with folder name: " + folderName);
+  } else {
+    alert("Please enter a valid folder name");
+  }
+}
+
+function showSection(id){ 
+  document.querySelectorAll(".section").forEach(s=>s.style.display="none"); 
+  document.getElementById(id).style.display="block"; 
+  if(id==="history") renderHistory();
+  if(id==="settings") document.getElementById("invoiceFolderName").value = invoiceFolderName;
+  if(id==="customers") {
+    renderCustomers();
+    initCustomerDropdowns();
+  }
+  if(id==="invoice") {
+    initCustomerDropdowns();
+    updateInvoiceSummary();
+  }
+}
+
+function logout(){ 
+  localStorage.removeItem("isLoggedIn"); 
+  window.location.href="index.html"; 
+}
+
+// -------------------- INVOICE --------------------
+function showInvoiceForm(){ 
+  document.getElementById("overlay").style.display="block"; 
+  document.getElementById("invoiceForm").style.display="block";
+  document.getElementById("itemName").focus();
+}
+
+function hideInvoiceForm(){ 
+  document.getElementById("overlay").style.display="none"; 
+  document.getElementById("invoiceForm").style.display="none";
+  document.getElementById("itemName").value="";
+  document.getElementById("itemQty").value="";
+  document.getElementById("itemPrice").value="";
+  document.getElementById("itemUnit").value="Pieces";
+}
+
+function submitInvoiceItem(){
+  const name=document.getElementById("itemName").value;
+  const qty=parseInt(document.getElementById("itemQty").value);
+  const unit=document.getElementById("itemUnit").value;
+  const price=parseFloat(document.getElementById("itemPrice").value);
+  if(!name || isNaN(qty) || isNaN(price)) return alert("Please fill all fields!");
+  const product=inventory.find(i=>i.name===name);
+  if(!product) return alert("Product not found!");
+  if(qty>product.stock) return alert(`Not enough stock! Available: ${product.stock} ${product.unit || "Pieces"}`);
+  
+  invoiceItems.push({name,qty,price,unit});
+  renderInvoice(); 
+  updateInvoiceSummary();
+  hideInvoiceForm();
+}
+
+function renderInvoice(){
+  const tbody=document.getElementById("invoiceTable"); tbody.innerHTML="";
+  invoiceItems.forEach((i,k)=>{
+    tbody.innerHTML+=`<tr>
+      <td>${k+1}</td>
+      <td>${i.name}</td>
+      <td>${i.qty}</td>
+      <td>${i.unit || "Pieces"}</td>
+      <td>PKR ${i.price.toFixed(2)}</td>
+      <td>PKR ${(i.qty*i.price).toFixed(2)}</td>
+      <td>
+        <div class="action-buttons">
+          <button class="table-btn delete" onclick="removeInvoiceItem(${k})" title="Remove Item">
+            <i class="fas fa-trash"></i> Remove
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  });
+}
+
+function removeInvoiceItem(index){
+  if(confirm("Remove this item from invoice?")){
+    invoiceItems.splice(index,1);
+    renderInvoice();
+    updateInvoiceSummary();
+  }
+}
+
+function updateInvoiceSummary(){
+  const totalItems = invoiceItems.length;
+  const totalQty = invoiceItems.reduce((sum, item) => sum + item.qty, 0);
+  const currentInvoice = invoiceItems.reduce((sum, item) => sum + (item.qty * item.price), 0);
+  
+  let previousBalance = 0;
+  if (selectedCustomerId) {
+    const customer = customers.find(c => c.id === selectedCustomerId);
+    if (customer) previousBalance = customer.currentBalance;
+  }
+  
+  const totalWithPrevious = currentInvoice + previousBalance;
+  
+  document.getElementById("summaryTotalItems").textContent = totalItems;
+  document.getElementById("summaryTotalQty").textContent = totalQty;
+  document.getElementById("summaryTotalAmount").textContent = `PKR ${currentInvoice.toFixed(2)}`;
+  document.getElementById("summaryPreviousBalance").textContent = `PKR ${previousBalance.toFixed(2)}`;
+  document.getElementById("summaryTotalWithPrevious").textContent = `PKR ${totalWithPrevious.toFixed(2)}`;
+}
+
+function clearInvoice(){
+  if(invoiceItems.length === 0) return;
+  if(confirm("Clear all items from current invoice?")){
+    invoiceItems = [];
+    renderInvoice();
+    updateInvoiceSummary();
+    document.getElementById("customerSelect").value = "";
+    document.getElementById("newCustomerFields").style.display = "none";
+    document.getElementById("invoiceCustomerName").value = "";
+    document.getElementById("invoiceCustomerPhone").value = "";
+    document.getElementById("invoiceCustomerAddress").value = "";
+    selectedCustomerId = null;
+  }
+}
+
+async function generateInvoicePDF(){
+    const customerSelect = document.getElementById("customerSelect");
+    let customerName = "";
+    let customerPhone = "";
+    let customerAddress = "";
+    
+    if (customerSelect.value === "new") {
+        customerName = document.getElementById("invoiceCustomerName").value.trim();
+        customerPhone = document.getElementById("invoiceCustomerPhone").value.trim();
+        customerAddress = document.getElementById("invoiceCustomerAddress").value.trim();
+        
+        if (!customerName) {
+            alert("Please enter customer name!");
+            return;
+        }
+    } else if (customerSelect.value) {
+        const customer = customers.find(c => c.id === customerSelect.value);
+        if (!customer) {
+            alert("Customer not found!");
+            return;
+        }
+        customerName = customer.name;
+        customerPhone = customer.phone || "";
+        customerAddress = customer.address || "";
+    } else {
+        alert("Please select or add a customer!");
+        return;
+    }
+    
+    if(invoiceItems.length === 0) return alert("No items in invoice!");
+    
+    const totalQty = invoiceItems.reduce((sum, item) => sum + item.qty, 0);
+    const currentInvoice = invoiceItems.reduce((sum, item) => sum + (item.qty * item.price), 0);
+    
+    let previousBalance = 0;
+    if (selectedCustomerId) {
+        const customer = customers.find(c => c.id === selectedCustomerId);
+        if (customer) previousBalance = customer.currentBalance;
+    }
+    
+    const totalWithPrevious = currentInvoice + previousBalance;
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18); 
+    doc.setTextColor(44, 62, 80);
+    doc.text("Mohsin Traders", 105, 15, {align: 'center'});
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Labarkot Road College Doraha Mansehra", 105, 22, {align: 'center'});
+    doc.text("Contact: 03018146756 / 03115536075", 105, 27, {align: 'center'});
+    
+    const invoiceId = `INV-${Date.now().toString().slice(-6)}`;
+    const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const customerClean = customerName.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_');
+    const fileName = `Invoice-${invoiceId}-${customerClean}-${dateStr}.pdf`;
+    
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Invoice Date: ${new Date().toLocaleDateString('en-US',{weekday:'short',year:'numeric',month:'short',day:'numeric'})}`, 15, 40);
+    doc.text(`Invoice No: ${invoiceId}`, 15, 46);
+    doc.text(`Customer: ${customerName}`, 15, 52);
+    if (customerPhone) doc.text(`Phone: ${customerPhone}`, 15, 58);
+    if (customerAddress) doc.text(`Address: ${customerAddress}`, 15, 64);
+    
+    const startY = customerPhone || customerAddress ? 70 : 60;
+    
+    const tableData = invoiceItems.map((i,k)=>[
+        k+1,
+        i.name,
+        `${i.qty} ${i.unit || "Pieces"}`,
+        `PKR ${i.price.toFixed(2)}`,
+        `PKR ${(i.qty*i.price).toFixed(2)}`
+    ]);
+    
+    doc.autoTable({ 
+        head:[["S.No","Product Name","Quantity","Price/Unit","Total"]], 
+        body:tableData, 
+        startY: startY,
+        headStyles: {fillColor: [44, 62, 80]},
+        margin: {horizontal: 15}
+    });
+    
+    const finalY = doc.lastAutoTable.finalY + 15;
+    
+    doc.setFontSize(11);
+    doc.text("Invoice Summary", 15, finalY);
+    
+    doc.setFontSize(10);
+    doc.text("Total Items:", 15, finalY + 8);
+    doc.text(invoiceItems.length.toString(), 60, finalY + 8);
+    
+    doc.text("Total Quantity:", 15, finalY + 16);
+    doc.text(totalQty.toString(), 60, finalY + 16);
+    
+    doc.text("Current Invoice:", 15, finalY + 24);
+    doc.text(`PKR ${currentInvoice.toFixed(2)}`, 60, finalY + 24);
+    
+    doc.text("Previous Balance:", 15, finalY + 32);
+    doc.text(`PKR ${previousBalance.toFixed(2)}`, 60, finalY + 32);
+    
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text("Total With Previous:", 15, finalY + 40);
+    doc.text(`PKR ${totalWithPrevious.toFixed(2)}`, 60, finalY + 40);
+    
+    const footerY = doc.internal.pageSize.height - 20;
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.line(15, footerY - 5, 195, footerY - 5);
+    doc.text("© 2026 Mohsin Traders. All rights reserved.", 105, footerY, {align: 'center'});
+
+    doc.save(fileName);
+    
+    try {
+        const pdfBase64 = doc.output('datauristring').split(',')[1];
+        await fetch('/save-pdf', {
+              method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({pdfData: pdfBase64, fileName: fileName})
+        }).catch(() => console.log('Server save skipped'));
+    } catch (error) {
+        console.log('Server save error:', error);
+    }
+    
+    invoiceItems.forEach(item => {
+        const product = inventory.find(i => i.name === item.name);
+        if (product) {
+            product.stock -= item.qty;
+            product.sold += item.qty;
+            product.salePrice = item.price;
+        }
+    });
+    
+    if (!selectedCustomerId && customerName) {
+        const newCustomer = autoCreateCustomerFromInvoice(customerName, customerPhone, customerAddress);
+        selectedCustomerId = newCustomer.id;
+    }
+    
+    const invoiceData = {
+        id: invoiceId,
+        date: new Date().toISOString(),
+        customer: customerName,
+        customerPhone: customerPhone,
+        customerAddress: customerAddress,
+        items: [...invoiceItems],
+        totalQty: totalQty,
+        currentInvoice: currentInvoice,
+        previousBalance: previousBalance,
+        totalWithPrevious: totalWithPrevious,
+        fileName: fileName,
+        customerId: selectedCustomerId
+    };
+    
+    invoiceHistory.push(invoiceData);
+    saveData();
+    
+    invoiceItems = []; 
+    renderInvoice();
+    updateInvoiceSummary();
+    document.getElementById("customerSelect").value = "";
+    document.getElementById("newCustomerFields").style.display = "none";
+    document.getElementById("invoiceCustomerName").value = "";
+    document.getElementById("invoiceCustomerPhone").value = "";
+    document.getElementById("invoiceCustomerAddress").value = "";
+    selectedCustomerId = null;
+    
+    updateInventoryTable(); 
+    updateDashboard(); 
+    renderProducts();
+    renderCustomers();
+    initCustomerDropdowns();
+    
+    let alertMessage = `✅ Invoice Generated Successfully!\n\n📄 File: ${fileName}\n💰 Current Invoice: PKR ${currentInvoice.toFixed(2)}\n📊 Previous Balance: PKR ${previousBalance.toFixed(2)}\n💵 Total: PKR ${totalWithPrevious.toFixed(2)}\n👤 Customer: ${customerName}`;
+    
+    if (customerPhone) alertMessage += `\n📞 Phone: ${customerPhone}`;
+    if (customerAddress) alertMessage += `\n🏠 Address: ${customerAddress}`;
+    
+    alert(alertMessage);
+}
+
+// -------------------- HISTORY --------------------
+function renderHistory(){
+  const container=document.getElementById("historyContainer");
+  const filter=document.getElementById("searchCustomerHistory").value.toLowerCase();
+  container.innerHTML="";
+  
+  const filteredInvoices = invoiceHistory.filter(inv=>inv.customer.toLowerCase().includes(filter));
+  
+  if(filteredInvoices.length === 0){
+    container.innerHTML = `<div style="text-align:center; padding:40px; color:#666;">
+      <i class="fas fa-file-invoice" style="font-size:48px; margin-bottom:20px;"></i>
+      <p>No invoices found</p>
+    </div>`;
+    return;
+  }
+  
+  filteredInvoices.forEach((inv,index)=>{
+    const originalIndex = invoiceHistory.findIndex(item => item.id === inv.id);
+    const div=document.createElement("div");
+    div.style.background="#fff"; 
+    div.style.marginBottom="20px"; 
+    div.style.padding="20px"; 
+    div.style.borderRadius="10px"; 
+    div.style.boxShadow="0 5px 15px rgba(0,0,0,0.08)";
+    div.style.borderLeft="4px solid var(--secondary)";
+    
+    let html=`<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <div>
+                  <h4 style="margin:0; color:var(--primary);">${inv.customer}</h4>
+                  <p style="margin:5px 0 0 0; color:#666; font-size:0.9em;">
+                    <i class="fas fa-calendar-alt"></i> ${new Date(inv.date).toLocaleDateString('en-US',{weekday:'short',year:'numeric',month:'short',day:'numeric'})}
+                    <span style="margin-left:15px;"><i class="fas fa-hashtag"></i> ${inv.id}</span>
+                  </p>
+                  ${inv.customerPhone ? `<p style="margin:2px 0 0 0; color:#666; font-size:0.85em;"><i class="fas fa-phone"></i> ${inv.customerPhone}</p>` : ''}
+                  ${inv.customerAddress ? `<p style="margin:2px 0 0 0; color:#666; font-size:0.85em;"><i class="fas fa-map-marker-alt"></i> ${inv.customerAddress}</p>` : ''}
+                </div>
+                <div style="text-align:right;">
+                  <p style="margin:0; font-weight:bold; color:var(--success);">PKR ${inv.currentInvoice.toFixed(2)}</p>
+                  <p style="margin:5px 0 0 0; font-size:0.9em; color:#666;">${inv.totalQty} items</p>
+                </div>
+              </div>`;
+    
+    html+=`<div style="background:#f8f9fa; padding:15px; border-radius:8px; margin-bottom:15px;">
+              <table style="width:100%; border-collapse:collapse;">
+                <thead><tr style="background:#e9ecef;"><th style="padding:8px; text-align:left;">Item</th><th style="padding:8px; text-align:right;">Qty</th><th style="padding:8px; text-align:right;">Unit</th><th style="padding:8px; text-align:right;">Price</th><th style="padding:8px; text-align:right;">Total</th></tr></thead>
+                <tbody>`;
+    
+    inv.items.forEach((item,i)=>{ 
+      html+=`<tr>
+                <td style="padding:8px; border-bottom:1px solid #dee2e6;">${item.name}</td>
+                <td style="padding:8px; text-align:right; border-bottom:1px solid #dee2e6;">${item.qty}</td>
+                <td style="padding:8px; text-align:right; border-bottom:1px solid #dee2e6;">${item.unit || "Pieces"}</td>
+                <td style="padding:8px; text-align:right; border-bottom:1px solid #dee2e6;">PKR ${item.price.toFixed(2)}</td>
+                <td style="padding:8px; text-align:right; border-bottom:1px solid #dee2e6;">PKR ${(item.qty*item.price).toFixed(2)}</td>
+              </tr>`; 
+    });
+    
+    html+=`</tbody></table></div>`;
+    
+    html+=`<div style="display:flex; justify-content:space-between; margin-top:15px; padding-top:15px; border-top:1px solid #eee;">
+              <div>
+                <p style="margin:5px 0;"><strong>Previous Balance:</strong> PKR ${inv.previousBalance.toFixed(2)}</p>
+                <p style="margin:5px 0;"><strong>Total With Previous:</strong> PKR ${inv.totalWithPrevious.toFixed(2)}</p>
+                ${inv.fileName ? `<p style="margin:5px 0; font-size:0.85rem; color:#666;"><strong>File:</strong> ${inv.fileName}</p>` : ''}
+              </div>
+              <div>
+                <button class="delete" onclick="deleteInvoice(${originalIndex})" style="padding:8px 16px;">
+                  <i class="fas fa-trash"></i> Delete Invoice
+                </button>
+              </div>
+            </div>`;
+    
+    div.innerHTML=html; 
+    container.appendChild(div);
+  });
+}
+
+function deleteInvoice(index){
+  if(confirm("Delete this invoice? This will restore inventory quantities.")){
+    const invoice = invoiceHistory[index];
+    invoice.items.forEach(item => {
+      const product = inventory.find(i => i.name === item.name);
+      if (product) {
+        product.stock += item.qty;
+        product.sold -= item.qty;
+        if (product.sold <= 0) product.salePrice = null;
+      }
+    });
+    
+    invoiceHistory.splice(index,1); 
+    saveData();
+    renderHistory();
+    updateInventoryTable();
+    updateDashboard();
+    renderProducts();
+    alert("Invoice deleted and inventory restored!");
+  }
+}
+
+// Initialize everything
+updateInventoryTable(); 
+updateDashboard(); 
+renderProducts();
+initCustomerDropdowns();
+renderCustomers();
+
+// Add event listeners for manual payment
+document.getElementById("manualPaymentCustomer").addEventListener("change", updateManualPaymentDisplay);
+document.getElementById("manualReceivedAmount").addEventListener("input", updateTotalPaidFromReceived);
+document.getElementById("manualRemainingBalance").addEventListener("input", updateNewBalanceFromRemaining);
+</script>
+</body>
+</html>
