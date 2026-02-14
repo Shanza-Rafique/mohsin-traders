@@ -1313,6 +1313,9 @@
       // ✅ Database test & debug tools
       // ============================================
 
+      // API Configuration - Change this based on deployment
+      const API_BASE_PATH = window.location.pathname.includes('/mohsin/') ? '/mohsin' : '';
+
       // ------------- AUTH & DATE -------------
       if (!localStorage.getItem("isLoggedIn"))
         window.location.href = "index.html";
@@ -1428,7 +1431,7 @@
         };
 
         try {
-          const response = await fetch("/api/save-all", {
+          const response = await fetch(`${API_BASE_PATH}/api/save-all`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data),
@@ -1465,7 +1468,7 @@
         console.log("🔵 Loading from database...");
 
         try {
-          const response = await fetch("/api/load-all");
+          const response = await fetch(`${API_BASE_PATH}/api/load-all`);
           const data = await response.json();
 
           // CRITICAL FIX: Ensure inventory is ALWAYS an array
@@ -1557,7 +1560,7 @@
       // View database in console
       async function viewDatabaseInConsole() {
         try {
-          const response = await fetch("/api/load-all");
+          const response = await fetch(`${API_BASE_PATH}/api/load-all`);
           const data = await response.json();
 
           console.log("=========================================");
@@ -1584,7 +1587,7 @@
         statusEl.style.color = "#856404";
 
         try {
-          const response = await fetch("/api/test-db");
+          const response = await fetch(`${API_BASE_PATH}/api/test-db`);
           const result = await response.json();
 
           if (result.success) {
