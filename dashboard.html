@@ -2889,6 +2889,16 @@
       initCustomerDropdowns();
       renderCustomers();
 
+      // Load data from database on startup
+      (async () => {
+        try {
+          await loadAllFromDatabase();
+        } catch (error) {
+          console.error("Failed to load from database:", error);
+          updateSyncStatus(false, "Connection failed");
+        }
+      })();
+
       // Event listeners
       document
         .getElementById("manualPaymentCustomer")
