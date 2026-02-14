@@ -1596,7 +1596,7 @@
             statusEl.style.color = "#155724";
 
             // Also check invoices folder
-            const invoiceResponse = await fetch("/check-invoices");
+            const invoiceResponse = await fetch(`${API_BASE_PATH}/check-invoices`);
             const invoiceResult = await invoiceResponse.json();
             document.getElementById("invoiceFolderStatus").innerHTML =
               invoiceResult.folderExists ? "✅ Exists" : "❌ Missing";
@@ -1929,7 +1929,7 @@
         // Save to server
         try {
           const pdfBase64 = doc.output("datauristring").split(",")[1];
-          const response = await fetch("/save-pdf", {
+          const response = await fetch(`${API_BASE_PATH}/save-pdf`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ pdfData: pdfBase64, fileName }),
