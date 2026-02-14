@@ -2,9 +2,9 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
-const Database = require("@replit/database");
+const FileDatabase = require("./db-adapter");
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
@@ -14,15 +14,15 @@ app.use(express.static(path.join(__dirname, "..")));
 app.use(express.static(__dirname));
 
 // ============================================
-// 💾 REPLIT DATABASE - PERMANENT STORAGE
+// 💾 FILE DATABASE - PERMANENT STORAGE
 // ============================================
 let db;
 try {
-    db = new Database();
-    console.log("✅ Replit Database initialized successfully");
+    db = new FileDatabase();
+    console.log("✅ File Database initialized successfully");
 } catch (error) {
-    console.error("❌ Replit Database initialization error:", error.message);
-    db = new Database();
+    console.error("❌ File Database initialization error:", error.message);
+    db = new FileDatabase();
 }
 
 // Test database connection on startup
@@ -408,8 +408,8 @@ app.listen(PORT, () => {
     console.log("\n=========================================");
     console.log("✅ MOHSIN TRADERS BACKEND STARTED");
     console.log("=========================================");
-    console.log(`🌐 URL: https://mohsin-traders--shanzarafique.replit.app`);
-    console.log(`💾 DATABASE: Replit Database (PERMANENT!)`);
+    console.log(`🌐 PORT: ${PORT}`);
+    console.log(`💾 DATABASE: File-based Storage (PERMANENT!)`);
     console.log(`📁 INVOICES: ${INVOICES_DIR}`);
     console.log("=========================================\n");
     console.log("🔑 Login: Mohsin / mohsin@123");
